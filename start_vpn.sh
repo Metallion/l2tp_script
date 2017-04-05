@@ -12,6 +12,8 @@ fi
 TUNNEL_INTERFACE="${TUNNEL_INTERFACE:-ppp0}"
 CONNECTION_NAME="${CONNECTION_NAME:-L2TP-PSK}"
 
+IPSEC_CONFIG="${IPSEC_CONFIG:-/etc/ipsec.conf}"
+
 function get_default_gw_interface() {
   ip route show | grep default | grep -oP "(?<=dev )[^ ]+"
 }
@@ -24,7 +26,8 @@ LOCAL_INTERFACE="${LOCAL_INTERFACE:-$(get_default_gw_interface)}"
 
 #ip route add $TARGET_IP via $(get_tunnel_ip)
 
-cat > ~/jantje << EOS
+cp ${IPSEC_CONFIG} ${IPSEC_CONFIG}.$(date -Is)
+cat > ${IPSEC_CONFIG} << EOS
 config setup
 	virtual_private=%v4:10.0.0.0/8,%v4:192.168.0.0/16,%v4:172.16.0.0/12
 	nat_traversal=yes
