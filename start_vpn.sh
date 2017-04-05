@@ -23,10 +23,7 @@ XL2TPD_CLIENT="${XL2TPD_CLIENT:-/etc/ppp/options.l2tpd.client}"
 function get_default_gw_interface() {
   ip route show | grep default | grep -oP "(?<=dev )[^ ]+"
 }
-
-function get_tunnel_ip() {
-  ip addr show $TUNNEL_INTERFACE | grep "inet\b" | awk '{print $2}'
-}
+LOCAL_INTERFACE="${LOCAL_INTERFACE:-$(get_default_gw_interface)}"
 
 function backup_file() {
   local file="$1"
@@ -36,9 +33,6 @@ function backup_file() {
   fi
 }
 
-LOCAL_INTERFACE="${LOCAL_INTERFACE:-$(get_default_gw_interface)}"
-
-#ip route add $TARGET_IP via $(get_tunnel_ip)
 
 # Create the ipsec config file
 backup_file ${IPSEC_CONFIG}
@@ -105,3 +99,15 @@ connect-delay 5000
 name ${L2TP_USER_NAME}
 password ${L2TP_PASSWORD}
 EOS
+
+# Start openswan (= ipsec) and xl2tpd
+systemctl start openswan
+systemctl start xl2tpd
+ipsec auto --up ${CONNECTION_NAME}
+
+# Create the tunnel interface
+echo "c vpn-connection" > /var/run/xl2tpd/l2tp-control
+
+# Route the target IP range through the tunnel
+tunnel_ip=$(ip addr show $TUNNEL_INTERFACE | grep "inet\b" | awk '{print $2}')
+ip route add "$TARGET_IP_RANGE" via "$tunnel_ip"
