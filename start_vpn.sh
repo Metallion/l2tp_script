@@ -23,6 +23,9 @@ IPSEC_SECRETS="${IPSEC_SECRETS:-/etc/ipsec.secrets}"
 XL2TPD_CONFIG="${XL2TPD_CONFIG:-/etc/xl2tpd/xl2tpd.conf}"
 XL2TPD_CLIENT="${XL2TPD_CLIENT:-/etc/ppp/options.l2tpd.client}"
 
+# Can also be: mschap-v2
+L2TP_AUTHENTICATION="${L2TP_AUTHENTICATION}:-pap"
+
 # Usage and dependency checks
 dependencies=(L2TP_SERVER_IP L2TP_USER_NAME L2TP_PASSWORD IPSEC_PRE_SHARED_KEY TARGET_IP_RANGE)
 function print_usage() {
@@ -118,7 +121,7 @@ cat > ${XL2TPD_CLIENT} << EOS
 ipcp-accept-local
 ipcp-accept-remote
 refuse-eap
-require-pap
+require-${L2TP_AUTHENTICATION}
 noccp
 noauth
 idle 1800
