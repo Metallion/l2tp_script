@@ -15,6 +15,9 @@ CONNECTION_NAME="${CONNECTION_NAME:-L2TP-PSK}"
 IPSEC_CONFIG="${IPSEC_CONFIG:-/etc/ipsec.conf}"
 IPSEC_SECRETS="${IPSEC_SECRETS:-/etc/ipsec.secrets}"
 
+XL2TPD_CONFIG="${XL2TPD_CONFIG:-/etc/xl2tpd/xl2tpd.conf}"
+XL2TPD_CLIENT="${XL2TPD_CLIENT:-/etc/ppp/options.l2tpd.client}"
+
 function get_default_gw_interface() {
   ip route show | grep default | grep -oP "(?<=dev )[^ ]+"
 }
@@ -61,3 +64,30 @@ if [[ "$?" != "0" ]]; then
   echo "${secret}" >> "${IPSEC_SECRETS}"
 fi
 set -e
+
+# Set up xl2tpd
+cat > ${XL2TPD_CONFIG} << EOS
+[lac vpn-connection]
+lns = ${VPN_SERVER_IP}
+ppp debug = yes
+pppoptfile = /etc/ppp/options.l2tpd.client
+length bit = yes
+EOS
+
+cat > ${XL2TPD_CLIENT} << EOS
+ipcp-accept-local
+ipcp-accept-remote
+refuse-eap
+require-pap
+noccp
+noauth
+idle 1800
+mtu 1410
+mru 1410
+defaultroute
+usepeerdns
+debug
+connect-delay 5000
+name ${VPN_USER_NAME}
+password ${VPN_PASSWORD}
+EOS
