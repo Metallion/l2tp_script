@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -xe
+set -e
 
 if [ -n "$1" ]; then
   source "$1"
@@ -13,6 +13,7 @@ TUNNEL_INTERFACE="${TUNNEL_INTERFACE:-ppp0}"
 CONNECTION_NAME="${CONNECTION_NAME:-L2TP-PSK}"
 
 IPSEC_CONFIG="${IPSEC_CONFIG:-/etc/ipsec.conf}"
+IPSEC_SECRETS="${IPSEC_SECRETS:-/etc/ipsec.secrets}"
 
 function get_default_gw_interface() {
   ip route show | grep default | grep -oP "(?<=dev )[^ ]+"
@@ -26,6 +27,7 @@ LOCAL_INTERFACE="${LOCAL_INTERFACE:-$(get_default_gw_interface)}"
 
 #ip route add $TARGET_IP via $(get_tunnel_ip)
 
+# Create the ipsec config file
 cp ${IPSEC_CONFIG} ${IPSEC_CONFIG}.$(date -Is)
 cat > ${IPSEC_CONFIG} << EOS
 config setup
@@ -51,3 +53,11 @@ conn ${CONNECTION_NAME}
 	right=${VPN_SERVER_IP}
 	rightprotoport=17/1701
 EOS
+
+# Add the ipsec secrets if not there already
+secret="0.0.0.0 : PSK \"${PRE_SHARED_KEY}\""
+set +e; grep -q "${secret}" "${IPSEC_SECRETS}"
+if [[ "$?" != "0" ]]; then
+  echo "${secret}" >> "${IPSEC_SECRETS}"
+fi
+set -e
