@@ -2,12 +2,26 @@
 
 set -e
 
+if [[ "$EUID" -ne "0" ]]; then
+  echo "Permission denied. Run this as root or sudo."
+  exit 1
+fi
+
 if [ -n "$1" ]; then
   source "$1"
 fi
 
-#L2TP_SERVER_IP
-#TARGET_IP=
+# Fill in the following to match the L2TP/IPSec VPN that you're connecting to
+# TARGET_IP_RANGE means a CIDR notation of addresses you wish to route through
+# the VPN tunnel. The rest should be self explanatory.
+#
+# You can also put these in another file and pass that as an argument
+
+#L2TP_SERVER_IP=
+#L2TP_USER_NAME=
+#L2TP_PASSWORD=
+#IPSEC_PRE_SHARED_KEY=
+#TARGET_IP_RANGE=
 
 BACKUP_CONFIG_FILES="${BACKUP_CONFIG_FILES:-true}"
 
