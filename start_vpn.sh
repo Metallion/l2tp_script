@@ -11,22 +11,7 @@ if [ -n "$1" ]; then
   source "$1"
 fi
 
-function print_usage() {
-cat << EOS
-# Fill in the following to match the L2TP/IPSec VPN that you're connecting to
-# TARGET_IP_RANGE means a CIDR notation of addresses you wish to route through
-# the VPN tunnel. The rest should be self explanatory.
-#
-# You can also put these in another file and pass that as an argument
-
-L2TP_SERVER_IP=
-L2TP_USER_NAME=
-L2TP_PASSWORD=
-IPSEC_PRE_SHARED_KEY=
-TARGET_IP_RANGE=
-EOS
-}
-
+# Optional variables
 BACKUP_CONFIG_FILES="${BACKUP_CONFIG_FILES:-true}"
 
 TUNNEL_INTERFACE="${TUNNEL_INTERFACE:-ppp0}"
@@ -37,6 +22,36 @@ IPSEC_SECRETS="${IPSEC_SECRETS:-/etc/ipsec.secrets}"
 
 XL2TPD_CONFIG="${XL2TPD_CONFIG:-/etc/xl2tpd/xl2tpd.conf}"
 XL2TPD_CLIENT="${XL2TPD_CLIENT:-/etc/ppp/options.l2tpd.client}"
+
+# Usage and dependency checks
+dependencies=(L2TP_SERVER_IP L2TP_USER_NAME L2TP_PASSWORD IPSEC_PRE_SHARED_KEY TARGET_IP_RANGE)
+function print_usage() {
+cat << EOS
+# Set the following environment variables to match the L2TP/IPSec VPN that you're connecting to.
+#
+# TARGET_IP_RANGE means a CIDR notation of the destination IP range you wish to route through the VPN tunnel.
+# The rest should be self explanatory.
+#
+# You can also put these in another file and pass that as an argument.
+
+EOS
+
+
+for i in ${dependencies[@]}; do
+  echo "$i"
+done
+}
+
+for i in ${dependencies[@]}; do
+  if [[ -z $(printf '%s\n' "${!i}") ]]; then
+    print_usage
+
+    echo
+    echo "## ERROR ##"
+    echo "$i was not set."
+    exit 2
+  fi
+done
 
 function get_default_gw_interface() {
   ip route show | grep default | grep -oP "(?<=dev )[^ ]+"
@@ -50,17 +65,6 @@ function backup_file() {
     cp ${file} ${file}.$(date -Is)
   fi
 }
-
-dependencies=(L2TP_SERVER_IP L2TP_USER_NAME L2TP_PASSWORD IPSEC_PRE_SHARED_KEY TARGET_IP_RANGE)
-for i in ${dependencies[@]}; do
-  if [[ -z $(printf '%s\n' "${!i}") ]]; then
-    print_usage
-
-    echo
-    echo "ERROR: $i was not set."
-    exit 2
-  fi
-done
 
 # Create the ipsec config file
 backup_file ${IPSEC_CONFIG}
