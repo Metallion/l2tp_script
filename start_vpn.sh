@@ -11,17 +11,21 @@ if [ -n "$1" ]; then
   source "$1"
 fi
 
+function print_usage() {
+cat << EOS
 # Fill in the following to match the L2TP/IPSec VPN that you're connecting to
 # TARGET_IP_RANGE means a CIDR notation of addresses you wish to route through
 # the VPN tunnel. The rest should be self explanatory.
 #
 # You can also put these in another file and pass that as an argument
 
-#L2TP_SERVER_IP=
-#L2TP_USER_NAME=
-#L2TP_PASSWORD=
-#IPSEC_PRE_SHARED_KEY=
-#TARGET_IP_RANGE=
+L2TP_SERVER_IP=
+L2TP_USER_NAME=
+L2TP_PASSWORD=
+IPSEC_PRE_SHARED_KEY=
+TARGET_IP_RANGE=
+EOS
+}
 
 BACKUP_CONFIG_FILES="${BACKUP_CONFIG_FILES:-true}"
 
@@ -47,6 +51,16 @@ function backup_file() {
   fi
 }
 
+dependencies=(L2TP_SERVER_IP L2TP_USER_NAME L2TP_PASSWORD IPSEC_PRE_SHARED_KEY TARGET_IP_RANGE)
+for i in ${dependencies[@]}; do
+  if [[ -z $(printf '%s\n' "${!i}") ]]; then
+    print_usage
+
+    echo
+    echo "ERROR: $i was not set."
+    exit 2
+  fi
+done
 
 # Create the ipsec config file
 backup_file ${IPSEC_CONFIG}
