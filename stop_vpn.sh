@@ -1,4 +1,6 @@
 #!/bin/bash
 
-systemctl start xl2tpd
-systemctl start openswan
+set -xe
+
+systemctl stop xl2tpd
+systemctl stop openswan
