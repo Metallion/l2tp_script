@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -xe
 
 if [[ "$EUID" -ne "0" ]]; then
   echo "Permission denied. Run this as root or sudo."
@@ -24,7 +24,7 @@ XL2TPD_CONFIG="${XL2TPD_CONFIG:-/etc/xl2tpd/xl2tpd.conf}"
 XL2TPD_CLIENT="${XL2TPD_CLIENT:-/etc/ppp/options.l2tpd.client}"
 
 # Can also be: mschap-v2
-L2TP_AUTHENTICATION="${L2TP_AUTHENTICATION}:-pap"
+L2TP_AUTHENTICATION="${L2TP_AUTHENTICATION:-pap}"
 
 # Usage and dependency checks
 dependencies=(L2TP_SERVER_IP L2TP_USER_NAME L2TP_PASSWORD IPSEC_PRE_SHARED_KEY TARGET_IP_RANGE)
@@ -138,10 +138,16 @@ EOS
 # Start openswan (= ipsec) and xl2tpd
 systemctl start openswan
 systemctl start xl2tpd
+
+# Give openswan a bit of time to initialize ipsec before we bring up the connection
+sleep 1
 ipsec auto --up ${CONNECTION_NAME}
 
 # Create the tunnel interface
 echo "c vpn-connection" > /var/run/xl2tpd/l2tp-control
+
+# Give it some time to bring up the ppp interface
+sleep 2
 
 # Route the target IP range through the tunnel
 tunnel_ip=$(ip addr show $TUNNEL_INTERFACE | grep "inet\b" | awk '{print $2}')
