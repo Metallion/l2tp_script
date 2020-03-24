@@ -13,7 +13,10 @@ I wrote this for my Arch Linux machine so the script uses systemd to start these
 
 Set the following environment variables to match the L2TP/IPSec VPN that you're connecting to.
 
-`TARGET_IP_RANGE` means a CIDR notation of the destination IP range you wish to route through the VPN tunnel.
+`TARGET_IP_RANGES` means a space separated list of CIDR notation of the destination IP range you wish to route through the VPN tunnel.
+
+`TARGET_DOMAINS` means a space separated list of domain names you wish to route through the VPN. For example if you want all connections to www.example.com to go through the VPN, you would add that domain here.
+
 The rest should be self explanatory.
 
 You can also put these in another file and pass that as an argument.
@@ -22,4 +25,5 @@ You can also put these in another file and pass that as an argument.
 * L2TP_USER_NAME
 * L2TP_PASSWORD
 * IPSEC_PRE_SHARED_KEY
-* TARGET_IP_RANGE
+* TARGET_IP_RANGES
+* TARGET_DOMAINS
