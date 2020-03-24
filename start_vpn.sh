@@ -11,6 +11,8 @@ if [ -n "$1" ]; then
   source "$1"
 fi
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
 # Optional variables
 BACKUP_CONFIG_FILES="${BACKUP_CONFIG_FILES:-true}"
 
@@ -27,7 +29,7 @@ XL2TPD_CLIENT="${XL2TPD_CLIENT:-/etc/ppp/options.l2tpd.client}"
 L2TP_AUTHENTICATION="${L2TP_AUTHENTICATION:-pap}"
 
 # Usage and dependency checks
-dependencies=(L2TP_SERVER_IP L2TP_USER_NAME L2TP_PASSWORD IPSEC_PRE_SHARED_KEY TARGET_IP_RANGE)
+dependencies=(L2TP_SERVER_IP L2TP_USER_NAME L2TP_PASSWORD IPSEC_PRE_SHARED_KEY)
 function print_usage() {
 cat << EOS
 # Set the following environment variables to match the L2TP/IPSec VPN that you're connecting to.
@@ -151,4 +153,13 @@ sleep 2
 
 # Route the target IP range through the tunnel
 tunnel_ip=$(ip addr show $TUNNEL_INTERFACE | grep "inet\b" | awk '{print $2}')
-ip route add "$TARGET_IP_RANGE" via "$tunnel_ip"
+for ip_range in $TARGET_IP_RANGE; do
+  if [[ $ip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    ip route add "$ip_range" via "$tunnel_ip" dev "${TUNNEL_INTERFACE}"
+  fi
+done
+
+# Get IPs for target domains and route them too.
+for domain in $TARGET_DOMAINS; do
+  "$SCRIPT_DIR/route_domain_through_vpn.sh" "${domain}" "$TUNNEL_INTERFACE"
+done
