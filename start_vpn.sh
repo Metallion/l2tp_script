@@ -78,7 +78,7 @@ function backup_file() {
 backup_file ${IPSEC_CONFIG}
 cat > ${IPSEC_CONFIG} << EOS
 conn %default
-        keyingtries=0
+    keyingtries=0
 
 conn ${CONNECTION_NAME}
     type=transport
