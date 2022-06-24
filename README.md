@@ -4,7 +4,7 @@ Recently I set up a L2TP/IPsec VPN on my Arch Linux machine and there were so ma
 
 ## Requirements
 
-* openswan
+* strongswan
 * xl2tpd
 
 I wrote this for my Arch Linux machine so the script uses systemd to start these services and writes config files to where Arch keeps them.
