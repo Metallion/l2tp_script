@@ -66,16 +66,7 @@ function get_default_gw_interface() {
 }
 LOCAL_INTERFACE="${LOCAL_INTERFACE:-$(get_default_gw_interface)}"
 
-function backup_file() {
-  local file="$1"
-
-  if [[ "${BACKUP_CONFIG_FILES}" == "true"  && -f "${file}" ]]; then
-    cp ${file} ${file}.$(date -Is)
-  fi
-}
-
 # Create the ipsec config file
-backup_file ${IPSEC_CONFIG}
 cat > ${IPSEC_CONFIG} << EOS
 conn %default
     keyingtries=0
@@ -98,7 +89,6 @@ conn ${CONNECTION_NAME}
 EOS
 
 # Add the ipsec secrets if not there already
-backup_file ${IPSEC_SECRETS}
 secret="0.0.0.0 : PSK \"${IPSEC_PRE_SHARED_KEY}\""
 set +e
 [[ -f "${IPSEC_SECRETS}" ]] && grep -q "${secret}" "${IPSEC_SECRETS}"
@@ -108,7 +98,6 @@ fi
 set -e
 
 # Set up xl2tpd
-backup_file ${XL2TPD_CONFIG}
 cat > ${XL2TPD_CONFIG} << EOS
 [lac vpn-connection]
 lns = ${L2TP_SERVER_IP}
@@ -117,7 +106,6 @@ pppoptfile = /etc/ppp/options.l2tpd.client
 length bit = yes
 EOS
 
-backup_file ${XL2TPD_CLIENT}
 cat > ${XL2TPD_CLIENT} << EOS
 ipcp-accept-local
 ipcp-accept-remote
