@@ -146,7 +146,7 @@ ipsec restart
 echo "c vpn-connection" > /var/run/xl2tpd/l2tp-control
 
 # Give it some time to bring up the ppp interface
-sleep 2
+sleep 4
 
 # Route the target IP range through the tunnel
 tunnel_ip=$(ip addr show $TUNNEL_INTERFACE | grep "inet\b" | awk '{print $2}')
