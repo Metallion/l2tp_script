@@ -77,28 +77,24 @@ function backup_file() {
 # Create the ipsec config file
 backup_file ${IPSEC_CONFIG}
 cat > ${IPSEC_CONFIG} << EOS
-config setup
-	virtual_private=%v4:10.0.0.0/8,%v4:192.168.0.0/16,%v4:172.16.0.0/12
-	nat_traversal=yes
-	protostack=netkey
-	oe=no
-	plutoopts="--interface=${LOCAL_INTERFACE}"
+conn %default
+        keyingtries=0
+
 conn ${CONNECTION_NAME}
-	authby=secret
-	pfs=no
-	auto=add
-	keyingtries=3
-	dpddelay=30
-	dpdtimeout=120
-	dpdaction=clear
-	rekey=yes
-	ikelifetime=8h
-	keylife=1h
-	type=transport
-	left=%defaultroute
-	leftprotoport=17/1701
-	right=${L2TP_SERVER_IP}
-	rightprotoport=17/1701
+    type=transport
+    auto=start
+    keyexchange=ikev1
+    authby=psk
+    left=%defaultroute
+    right=${L2TP_SERVER_IP}
+    ike=aes256-sha256-modp1024
+    esp=aes256-sha256-modp1024
+    keyingtries=%forever
+    ikelifetime=28800s
+    lifetime=28800s
+    dpddelay=10s
+    dpdtimeout=50s
+    dpdaction=restart
 EOS
 
 # Add the ipsec secrets if not there already
@@ -141,12 +137,10 @@ password ${L2TP_PASSWORD}
 EOS
 
 # Start openswan (= ipsec) and xl2tpd
-systemctl start openswan
+systemctl start strongswan
 systemctl start xl2tpd
 
-# Give openswan a bit of time to initialize ipsec before we bring up the connection
-sleep 1
-ipsec auto --up ${CONNECTION_NAME}
+ipsec restart
 
 # Create the tunnel interface
 echo "c vpn-connection" > /var/run/xl2tpd/l2tp-control
