@@ -124,7 +124,7 @@ name ${L2TP_USER_NAME}
 password ${L2TP_PASSWORD}
 EOS
 
-# Start openswan (= ipsec) and xl2tpd
+# Start strongswan (= ipsec) and xl2tpd
 systemctl start strongswan
 systemctl start xl2tpd
 
